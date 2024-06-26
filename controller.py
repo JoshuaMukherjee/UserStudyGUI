@@ -51,5 +51,6 @@ class Controller(tk.Tk):
 
     def show_frame(self, page_name):
         frame = self.frames[page_name]
+        frame.show()
         frame.tkraise()
     

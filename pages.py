@@ -64,8 +64,8 @@ class ID_page(tk.Frame):
       self.id_entry = tk.Entry(self,textvariable = self.id_var, **id_args)
       self.id_entry.grid(row = 3, column = 1, pady = 10) 
 
-      sub_btn=tk.Button(self, command = self.submit, **button_args)
-      sub_btn.grid(row = 3, column = 2, pady = 10) 
+      self.sub_btn=tk.Button(self, command = self.submit, **button_args)
+      self.sub_btn.grid(row = 3, column = 2, pady = 10) 
 
    def submit(self):
       participant_id = self.id_entry.get()
@@ -73,11 +73,12 @@ class ID_page(tk.Frame):
       if self.next_page is not None:
          self.controller.show_frame(self.next_page)
         
-
+   def show(self):
+      pass
 
 
 class Text_Page(tk.Frame):
-   def __init__(self, parent, controller, text_args=None, button_args=None, next_page=None, button_func=None): 
+   def __init__(self, parent, controller, text_args=None, button_args=None, next_page=None, button_func=None, button_delay=0): 
       tk.Frame.__init__(self, parent)
 
 
@@ -87,6 +88,8 @@ class Text_Page(tk.Frame):
 
       self.grid_rowconfigure(0, weight=1)
       self.grid_columnconfigure(0, weight=1)
+
+      self.button_delay = button_delay
 
 
       if button_args is None:
@@ -109,23 +112,37 @@ class Text_Page(tk.Frame):
       self.into_label = ttk.Label(self, **text_args)
       self.into_label.grid(row = 0, column = 0, padx = 10, pady = 10) 
 
-      sub_btn=tk.Button(self, command = self.submit, **button_args)
-      sub_btn.grid(row = 1, column = 0, pady = 10) 
+      self.sub_btn=tk.Button(self, command = self.submit, **button_args)
+     
 
    def submit(self):
       if self.button_func is not None:
          self.button_func(self)
       if self.next_page is not None:
          self.controller.show_frame(self.next_page)
-      
+   
+   def show(self):
+      self.sub_btn.grid_forget()
+      self.sub_btn.after(self.button_delay, lambda: self.sub_btn.grid(row = 1, column = 0, pady = 10)  )
+
+
 
 class Response_Page(tk.Frame):
    def __init__(self, parent, controller, text_args=None, button_args=None,intensity_entry_args = None, 
-                number_entry_args=None, next_page=None, intensity_label_args = None, number_label_args = None): 
+                number_entry_args=None, next_page=None, intensity_label_args = None, number_label_args = None, 
+                extra_func = None, extra_func_args={}, rest_page = None, rest_id=None): 
       tk.Frame.__init__(self, parent)
 
       self.controller = controller
       self.next_page = next_page
+
+      self.extra_func = extra_func
+      self.extra_func_args = extra_func_args
+
+      self.rest_page = rest_page
+      self.rest_id = rest_id
+
+      self.i = 0
 
       self.grid_rowconfigure(0, weight=1)
       self.grid_columnconfigure(0, weight=1)
@@ -221,5 +238,22 @@ class Response_Page(tk.Frame):
          if valid:
             self.number_label['text'] = "Number:"
             self.intensity_label['text'] = "Intensity:"
-            if self.next_page is not None:
+            self.num_entry.delete(0, 'end')
+            self.intensity_entry.delete(0, 'end')
+            
+            self.i += 1
+            if self.rest_id is not None:
+               print(self.i % self.rest_id)
+               if self.i % self.rest_id == 0:
+                  self.controller.show_frame(self.rest_page)
+               elif self.next_page is not None:
+                  self.controller.show_frame(self.next_page)
+            
+            elif self.next_page is not None:
                self.controller.show_frame(self.next_page)
+        
+         if self.extra_func is not None:
+            self.extra_func(self.controller, **self.extra_func_args)
+   
+   def show(self):
+      pass
